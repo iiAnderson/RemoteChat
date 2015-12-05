@@ -1,3 +1,4 @@
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
@@ -9,28 +10,34 @@ public class ServerAdmin {
 
 	private static ServerAdmin instance;
 	private Map<String, NotificationSource> chats = new HashMap<String, NotificationSource>();
-	private Map<NotificationSource, ArrayList<Connection>> users = new HashMap<NotificationSource, ArrayList<Connection>>();
+	private Registry registry;
 	
 	private ServerAdmin(String s, int port){
+		try {
+			registry = LocateRegistry.createRegistry(port);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
 		createConnection(s, port);
 	}
 
-	public static ServerAdmin getInstance(){
-		return instance;
-	}
+	   public static ServerAdmin getInstance() {
+		      if(instance == null) {
+		         instance = new ServerAdmin("chats", 1100);
+		      }
+		      return instance;
+		   }
 
 
 	public static void main(String[] args){
-		instance = new ServerAdmin("chats", 1100);
+		ServerAdmin.getInstance();
 	}
 
 	private boolean createConnection(String s, int port){
 		try{
-			NotificationSource src = new NotificationSource("chat1");
+			NotificationSource src = new NotificationSource(s);
 			getChats().put(s, src);
-			getUsers().put(src, new ArrayList<Connection>());
-			Registry registry = LocateRegistry.createRegistry(port);
-			registry.rebind(s, src);
+			getRegistry().rebind(s, src);
 			System.out.println("NotificationSource binded");
 		} catch(Exception e){
 			e.printStackTrace();
@@ -43,8 +50,8 @@ public class ServerAdmin {
 		return chats;
 	}
 	
-	public Map<NotificationSource, ArrayList<Connection>> getUsers(){
-		return users;
+	public Registry getRegistry(){
+		return registry;
 	}
 }
 

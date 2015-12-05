@@ -4,6 +4,9 @@ public enum MessageID {
 	ConnectionRequest,
 	Notification,
 	Approved,
-	Denied
+	Denied,
+	PollServer,
+	NotifyOnMessage,
+	NoMessagesToPoll
 	
 }

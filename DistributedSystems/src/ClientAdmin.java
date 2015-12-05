@@ -1,27 +1,26 @@
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.util.List;
 import java.util.Scanner;
 
 public class ClientAdmin {
 
 	private static ClientAdmin instance;
 	private String help;
-	private List<ServerConnection> connections;
+	private NotificationSink sink;
 
 	private ClientAdmin(){
+		sink = new NotificationSink();
 		buildClient();
 	}
 
 	public static void main(String[] args) {
-		instance = new ClientAdmin();
+		ClientAdmin.getInstance();
 	}
 
 	private void buildClient(){
 		Scanner scan = new Scanner(System.in);
 		StringBuilder help = new StringBuilder();
 		help.append("----Commands----\n");
-		help.append("Connect Usage: connect <ip> <port> <chatname>");
+		help.append("Connect usage: connect <ip> <port> <chatname>\n");
+		help.append("Send usage: send <chatname> <message>");
 		this.help = help.toString();
 		System.out.println(help.toString());
 		while(true){
@@ -42,8 +41,17 @@ public class ClientAdmin {
 			String[] split = cmd.split(" ");
 			switch(split[0]){
 			case "connect": 
-				createNewConnection(split[1], Integer.parseInt(split[2]), split[3], "iiAnderson");
-				return true;	
+				getSink().createNewConnection(split[1], Integer.parseInt(split[2]), split[3], "matt");
+				return true;
+			case "send":
+				String s = "";
+				String chatName = split[1];
+				split[0] = "";
+				split[1] = "";
+				for(String string: split)
+					s += string;
+				getSink().sendMessage(chatName, s);
+				break;
 			default:
 				System.out.println("There was an error");
 				System.out.println(help);
@@ -56,26 +64,19 @@ public class ClientAdmin {
 		return false;
 	}
 
-	private boolean createNewConnection(String ip, int port, String chatName, String userID){
-		try{
-			Registry r = LocateRegistry.getRegistry(ip, port);
-			RemoteInterface ro = (RemoteInterface) r.lookup(chatName);
-			System.out.println("chat found");
-			ro.executeTask(new ConnectionRequest(userID));
-			connections.add(new ServerConnection(userID, ip, port, chatName));
-		} catch(Exception e){
-			e.printStackTrace();
-			return false;
-		}
-		return true;
+	public static void notifyClient(String message, String userID, String chatName){
+		System.out.println("[" + chatName + "][" + userID + "] > " + message );
 	}
 
-	public static ClientAdmin getInstance(){
+	public static ClientAdmin getInstance() {
+		if(instance == null) 
+			instance = new ClientAdmin();
 		return instance;
 	}
 
-	static class NotificationPoll {
-		
+	public NotificationSink getSink(){
+		return sink;
 	}
+
 }
 
