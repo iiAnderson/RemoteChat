@@ -38,7 +38,16 @@ public class NotificationSink {
 		return true;
 	}
 
-
+	public String[] listChats(String host, int port){
+		try {
+			Registry r = LocateRegistry.getRegistry(host, port);
+			return r.list();
+		} catch (RemoteException e) {
+			System.err.println("An error has occured, the host could not be contacted");
+		}
+		return null;
+	}
+	
 	public boolean sendMessage(String chatName, String message) throws RemoteException, UnknownHostException{
 		ServerConnection server = getConnections().get(chatName);
 		if(server == null){

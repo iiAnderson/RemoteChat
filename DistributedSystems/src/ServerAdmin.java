@@ -39,7 +39,7 @@ public class ServerAdmin {
 			Scanner scan = new Scanner(System.in);
 			StringBuilder help = new StringBuilder();
 			help.append("----Commands----\n");
-			help.append("Create usage: create: <chatname> <port>\n");
+			help.append("Create usage: create: <chatname> <port>");
 			this.help = help.toString();
 			System.out.println(help.toString());
 			while(true){
