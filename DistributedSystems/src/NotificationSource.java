@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.AbstractMap.SimpleEntry;
 
-public class NotificationSource extends UnicastRemoteObject implements RemoteInterface {
+public class NotificationSource extends UnicastRemoteObject implements ServerRemoteInterface {
 
 	private static final long serialVersionUID = -8627981551399289814L;
 	private String chatName;
@@ -21,64 +21,52 @@ public class NotificationSource extends UnicastRemoteObject implements RemoteInt
 		chatLog = new ArrayList<Entry<Connection, String>>();
 	}
 
-	@Override
-	public synchronized Message executeTask(Task t) throws RemoteException {
-		switch(t.taskID){
-		case PollServer:
-			return serverPolled((TaskMessage) t);
-		case ConnectionRequest:
-			return handleConnectionRequest((ConnectionRequest) t);
-		case NotifyOnMessage:
-			messageNotify((TaskMessage) t);
-		default:
-			return new Message(MessageID.Denied);
-		}
-	}
-	
-	private synchronized Message messageNotify(TaskMessage tm){
-		addToChatLog(tm.getMessage(), getUsers().get(tm.getUserID())); 
-		return new Message(MessageID.Approved);
+	public synchronized void notifyClient(Notification n, Connection conn){
+		conn.getClientRemoteInterface().notifyClient(n);
 	}
 
-	private synchronized Message handleConnectionRequest(ConnectionRequest req){
+	public synchronized void recieveMessage(TaskMessage m){
+		addToChatLog(m.getMessage(), getUsers().get(m.getUserID()));
+		getNotificationsToSend();
+	}
+
+	public synchronized Message handleConnectionRequest(ConnectionRequest req, ClientRemoteInterface inf){
 		if(getUsers().containsKey(req.getUserID()))
 			return new Message(MessageID.UsernameTakenException);
-		getUsers().put(req.getUserID(), new Connection(req.getAddress(), req.getUserID()));
-		
+		getUsers().put(req.getUserID(), new Connection(req.getAddress(), req.getUserID(), inf));
+
 		System.out.println(req.getUserID() + " at " + req.getAddress() + " has been added to the chat " + getChatName());
 		return new Message(MessageID.Approved);
 	}
-	
-	private synchronized Message serverPolled(TaskMessage pos){
-		List<Entry<Connection, String>> list = new ArrayList<Entry<Connection, String>>();
-		if(chatLog.size()==Integer.parseInt(pos.getMessage()))
-			return new Message(MessageID.NoMessagesToPoll);
 
-		for(int i = Integer.parseInt(pos.getMessage()); i <= chatLog.size()-1; i++)
-			list.add(getChatLog().get(i));
+	private void getNotificationsToSend(){
+		for(Connection conn: getUsers().values()){
 
-		if(list.equals(null))
-			return new Message(MessageID.NoMessagesToPoll);
+			List<Entry<Connection, String>> list = new ArrayList<Entry<Connection, String>>();
 
-		List<Entry<String, String>> msg = new ArrayList<Entry<String, String>>();
-		for(Entry<Connection, String> c: list)
-			msg.add(new SimpleEntry<String, String>(c.getKey().getUserID(), c.getValue()));
-		return new Notification(MessageID.Notification, msg, getChatName());
+			for(int i = conn.getClientRemoteInterface().getConnections().get(chatName).getCurrentState(); i <= chatLog.size()-1; i++)
+				list.add(getChatLog().get(i));
+
+			List<Entry<String, String>> msg = new ArrayList<Entry<String, String>>();
+			for(Entry<Connection, String> c: list)
+				msg.add(new SimpleEntry<String, String>(c.getKey().getUserID(), c.getValue()));
+			notifyClient(new Notification(msg, chatName), conn);
+		}
 	}
-	
+
 	public synchronized List<Entry<Connection, String>> getChatLog(){
 		return chatLog;
 	}
 
-	public String getChatName(){
+	public synchronized String getChatName(){
 		return chatName;
 	}
 
-	public Map<String, Connection> getUsers(){
+	public synchronized Map<String, Connection> getUsers(){
 		return users;
 	}
 
-	public synchronized void addToChatLog(String s, Connection c){
+	private void addToChatLog(String s, Connection c){
 		getChatLog().add(new SimpleEntry<Connection, String>(c, s));
 	}
 }
