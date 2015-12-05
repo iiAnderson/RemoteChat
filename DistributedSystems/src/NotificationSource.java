@@ -42,9 +42,13 @@ public class NotificationSource extends UnicastRemoteObject implements RemoteInt
 
 		case ConnectionRequest:
 			ConnectionRequest req = (ConnectionRequest) t;
+			if(getUsers().containsKey(req.getUserID()))
+				return new Message(MessageID.UsernameTakenException);
 			getUsers().put(req.getUserID(), new Connection(req.getAddress(), req.getUserID()));
+			
 			System.out.println(req.getUserID() + " at " + req.getAddress() + " has been added to the chat " + getChatName());
 			return new Message(MessageID.Approved);
+			
 		case NotifyOnMessage:
 			TaskMessage tm = (TaskMessage) t;
 			System.out.println("recieved " + tm.getMessage());

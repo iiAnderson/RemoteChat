@@ -5,6 +5,7 @@ public class ClientAdmin {
 	private static ClientAdmin instance;
 	private String help;
 	private NotificationSink sink;
+	private String userID;
 
 	private ClientAdmin(){
 		sink = new NotificationSink();
@@ -22,6 +23,9 @@ public class ClientAdmin {
 		help.append("Connect usage: connect <ip> <port> <chatname>\n");
 		help.append("Send usage: send <chatname> <message>");
 		this.help = help.toString();
+		
+		setUserName(scan);
+		
 		System.out.println(help.toString());
 		while(true){
 			try{
@@ -35,14 +39,22 @@ public class ClientAdmin {
 		}
 		scan.close();
 	}
+	
+	private void setUserName(Scanner scan){
+		System.out.println("Please enter your username:");
+		try{
+			userID = scan.nextLine();
+		} catch (Exception e){
+			System.err.println("Username must be a string");
+		}
+	}
 
 	private boolean executeCommand(String cmd){
 		try{
 			String[] split = cmd.split(" ");
 			switch(split[0]){
 			case "connect": 
-				getSink().createNewConnection(split[1], Integer.parseInt(split[2]), split[3], "matt");
-				return true;
+				return getSink().createNewConnection(split[1], Integer.parseInt(split[2]), split[3], getUserID());
 			case "send":
 				String s = "";
 				String chatName = split[1];
@@ -77,6 +89,9 @@ public class ClientAdmin {
 	public NotificationSink getSink(){
 		return sink;
 	}
-
+	
+	public String getUserID(){
+		return userID;
+	}
 }
 

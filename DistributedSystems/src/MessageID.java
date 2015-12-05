@@ -7,6 +7,7 @@ public enum MessageID {
 	Denied,
 	PollServer,
 	NotifyOnMessage,
-	NoMessagesToPoll
+	NoMessagesToPoll,
+	UsernameTakenException
 	
 }

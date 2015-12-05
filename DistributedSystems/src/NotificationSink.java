@@ -28,7 +28,7 @@ public class NotificationSink {
 			if(m.msgID.equals(MessageID.Approved))
 				getConnections().put(chatName, con);
 			else
-				throw new Exception("Could not connect");
+				System.err.println(m.msgID + "");
 		} catch(Exception e){
 			e.printStackTrace();
 			return false;
@@ -67,7 +67,8 @@ public class NotificationSink {
 			try {
 				n = (Message) connection.getRemoteInterface().executeTask(new TaskMessage(MessageID.PollServer, connection.getUserID(), "" + connection.getCurrentState()));
 			} catch (RemoteException e) {
-				System.out.println("There has been an error polling chat " + connection.getChatName() + " "  + e);
+				System.out.println("There has been an error polling chat , the chat has been removed." + connection.getChatName() + " "  + e);
+				getConnections().remove(connection.getChatName());
 			}
 			if(n instanceof Notification){
 				Notification not = (Notification) n;
