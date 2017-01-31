@@ -1,5 +1,7 @@
 # RemoteChat-Java
 
+Written 2015/16
+
 Uses RMI to create a synchronous peer to peer terminal based chat client.
 
 Should theoretically work outside your local network, but has not been 
